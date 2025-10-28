@@ -4,8 +4,8 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 
 const app = express();
-const port =  process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`NoVAHAMOTECH backend API running on port ${PORT}`));;
+const port = process.env.PORT || 10000;
+app.listen(port, () => console.log(`NoVAHAMOTECH backend API running on port ${port}`));
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
