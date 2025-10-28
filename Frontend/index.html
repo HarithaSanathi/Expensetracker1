@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>NoVAHAMOTECH - complete tracker app</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #f7fafc; color: #222; min-height: 100vh; display: flex; flex-direction: column; }
+    .app-container { display: flex; min-height: 100vh;}
+    aside {
+      background: #014378; color: white; width: 230px; min-height: 100vh;
+      padding: 40px 0 0 0; box-shadow: 2px 0 12px rgba(0,0,0,0.07);
+      position: sticky; top: 0; display: flex; flex-direction: column;
+    }
+    aside .logo {
+      margin-bottom: 40px; font-size: 27px; font-weight: bold;
+      text-align: center; letter-spacing: 2px;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    aside nav ul {
+      padding: 0; margin: 0;
+      display: flex; flex-direction: column; gap: 22px;
+      list-style: none;
+    }
+    aside nav ul li {
+      margin: 0; width: 100%;
+    }
+    aside nav ul li a {
+      color: white; text-decoration: none; font-size: 1.09em;
+      padding: 10px 35px; border-radius: 0 25px 25px 0; display: block;
+      transition: background 0.21s;
+    }
+    aside nav ul li a.active,
+    aside nav ul li a:hover {
+      background: #1976d2;
+    }
+    main {
+      padding: 38px 28px; flex: 1; max-width: 100vw; min-height: 100vh; background: #f7fafc;
+    }
+    .slide { margin-bottom: 32px;}
+    .slide h1 { font-size:2.1em; color:#014378;}
+    .slide h3 { color:#0955a9;}
+    .slide p { color:#434343; font-size:1.10em;}
+    .tracker-section {
+      display: none; background: white;
+      border-radius: 12px; padding: 30px;
+      box-shadow: 0 1px 5px rgba(0,67,120,0.07);
+      margin-bottom: 18px; max-width: 700px;
+    }
+    .tracker-section.active { display: block;}
+    .tracker-section h2 { color: #1976d2;}
+    form { display: flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+    form input:not([type="date"]), form select { width: 120px; }
+    form input, form select, form button {
+      padding: 7px 5px; border-radius: 3px;
+      border: 1px solid #eee;
+      font-size: 1em;
+    }
+    form button {
+      background: #1976d2;
+      color: white;
+      border: none;
+      width: 82px;
+      cursor: pointer;
+      margin-bottom: 7px;
+    }
+    form button:hover { background: #014378; }
+    table { width: 100%; border-collapse: collapse; margin-bottom:12px;}
+    th, td {
+      padding: 7px 6px;
+      border-bottom: 1px solid #ececec;
+      text-align: left;
+    }
+    th { background: #f2f6fa;}
+    .delete-btn, .edit-btn, .save-btn, .cancel-btn {
+      color: white;
+      border-radius: 4px;
+      border: none;
+      padding: 4px 9px;
+      margin: 1px; font-size: 0.99em;
+      cursor: pointer;
+      transition: background .22s;
+    }
+    .delete-btn { background: #e53935; }
+    .delete-btn:hover { background: #c62828;}
+    .edit-btn { background: #ffb300; color:#222;}
+    .edit-btn:hover { background: #ffa000;}
+    .save-btn { background: #1976d2;}
+    .save-btn:hover { background:#014378;}
+    .cancel-btn { background: #888;}
+    .cancel-btn:hover { background: #666;}
+    .totals { text-align:right; margin-top:6px;}
+    .dashboard-summary { background:#e8f0fe; max-width:840px; margin-bottom:30px; border-radius:14px; box-shadow:0 2px 7px rgba(25,118,210,0.06); padding:28px 24px;}
+    .dashboard-summary h2 { color:#014378; margin-top:0;}
+    .dashboard-row {display:flex;gap:36px;flex-wrap:wrap;}
+    .dashboard-cell {flex:1; min-width:140px; text-align: center; margin-bottom: 10px;}
+    .dashboard-total {flex:1; background:#1976d210; border-radius:12px; padding:8px 14px; text-align: center;}
+    .dashboard-balance {font-size:1.4em; color:#1976d2; font-weight:bold;}
+    .status-pending { background: #fffde7; color: #e65100; font-weight:bold; border-radius:5px;}
+    .status-completed { background: #e6ffed; color: #388e3c; font-weight:bold; border-radius:5px;}
+    .chart-area {margin:16px 0 30px 0; max-width:390px;}
+    @media (max-width: 850px) {
+      .app-container { flex-direction: column; }
+      aside { width:100vw; flex-direction: row; min-height:unset; padding: 12px 0;}
+      aside .logo { padding:0; margin:0 0 0 22px; text-align:left;}
+      aside nav ul { flex-direction: row;gap:8px;flex:1;}
+      aside nav ul li a {
+        padding:10px 13px;width:auto; font-size:1em;
+        border-radius:10px;
+      }
+      main { padding:24px 6vw;}
+      .dashboard-summary { padding:18px 6vw;}
+    }
+    @media (max-width: 560px) {
+      main { padding: 10px;}
+      .tracker-section, .slide, .dashboard-summary { padding: 12px;}
+      .dashboard-row { flex-direction:column; gap:16px;}
+      .chart-area {max-width:97vw;}
+      .tracker-section { max-width:100vw; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <aside>
+      <div class="logo">NoVAHAMOTECH</div>
+      <nav>
+        <ul>
+          <li><a href="#dashboard" class="active">Dashboard</a></li>
+          <li><a href="#salary">Salary Tracker</a></li>
+          <li><a href="#house">House Expenses</a></li>
+          <li><a href="#office">Office Expenses</a></li>
+        </ul>
+      </nav>
+    </aside>
+    <main>
+      <!-- Dashboard / Home slides -->
+      <section id="dashboard-slide" class="slide">
+        <h1>Welcome to NoVAHAMOTECH!</h1>
+        <p>Track all your finances—salary, house expenses, office expenses—all in one secure online dashboard. NoVAHAMOTECH helps you manage every credit and debit with clarity. Works seamlessly across desktop and mobile devices.</p>
+        <div style="margin: 30px 0;">
+          <h3>Our Mission</h3>
+          <p>To empower every individual and business with an easy-to-use, transparent expense tracker—so you always know where your money is going and growing.</p>
+        </div>
+        <div>
+          <h3>What's Inside?</h3>
+          <p>
+            Use the menu bar to access:<br>
+            - Salary Tracker: Record and analyze your earnings and deductions.<br>
+            - House Expenses: Keep a close eye on bills and home purchases.<br>
+            - Office Expenses: Manage and monitor business expenditures.<br>
+          </p>
+        </div>
+      </section>
+      <!-- Global Dashboard Summary -->
+      <section id="global-dashboard" class="dashboard-summary" style="display:block;">
+        <h2>Total Account Dashboard</h2>
+        <div class="dashboard-row">
+          <div class="dashboard-cell">
+            <h3>Total Balance</h3>
+            <div class="dashboard-balance">₹<span id="dash-salary">0.00</span></div>
+          </div>
+          <div class="dashboard-cell">
+            <h3>House Balance</h3>
+            <div class="dashboard-balance">₹<span id="dash-house">0.00</span></div>
+          </div>
+          <div class="dashboard-cell">
+            <h3>Office Balance</h3>
+            <div class="dashboard-balance">₹<span id="dash-office">0.00</span></div>
+          </div>
+          <div class="dashboard-total">
+            <h3>Total Balance</h3>
+            <div class="dashboard-balance" style="font-size:1.7em;">₹<span id="dash-total">0.00</span></div>
+          </div>
+        </div>
+      </section>
+      <!-- Salary Tracker Section -->
+      <section id="salary-section" class="tracker-section">
+        <h2>TotalExpenses</h2>
+        <form id="salary-form" autocomplete="off">
+          <input type="text" id="salary-desc" placeholder="Description" required />
+          <input type="number" id="salary-amt" placeholder="Amount" min="0" step="0.01" required />
+          <select id="salary-type" required>
+            <option value="" disabled selected>Type</option>
+            <option value="Credit">Credit</option>
+            <option value="Debit">Debit</option>
+          </select>
+          <input type="date" id="salary-date" required />
+          <select id="salary-status" required>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <button type="submit">Add</button>
+        </form>
+        <div class="chart-area"><canvas id="salaryChart"></canvas></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Amount (₹)</th>
+              <th>Type</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="salary-list"></tbody>
+        </table>
+        <div class="totals">Total: ₹<span id="salary-total">0.00</span></div>
+      </section>
+      <!-- House Expenses Section -->
+      <section id="house-section" class="tracker-section">
+        <h2>House Expense Tracker</h2>
+        <form id="house-form" autocomplete="off">
+          <input type="text" id="house-desc" placeholder="Description" required />
+          <input type="number" id="house-amt" placeholder="Amount" min="0" step="0.01" required />
+          <select id="house-type" required>
+            <option value="" disabled selected>Type</option>
+            <option value="Credit">Credit</option>
+            <option value="Debit">Debit</option>
+          </select>
+          <input type="date" id="house-date" required />
+          <select id="house-status" required>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <button type="submit">Add</button>
+        </form>
+        <div class="chart-area"><canvas id="houseChart"></canvas></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Amount (₹)</th>
+              <th>Type</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="house-list"></tbody>
+        </table>
+        <div class="totals">Total: ₹<span id="house-total">0.00</span></div>
+      </section>
+      <!-- Office Expenses Section -->
+      <section id="office-section" class="tracker-section">
+        <h2>Office Expense Tracker</h2>
+        <form id="office-form" autocomplete="off">
+          <input type="text" id="office-desc" placeholder="Description" required />
+          <input type="number" id="office-amt" placeholder="Amount" min="0" step="0.01" required />
+          <select id="office-type" required>
+            <option value="" disabled selected>Type</option>
+            <option value="Credit">Credit</option>
+            <option value="Debit">Debit</option>
+          </select>
+          <input type="date" id="office-date" required />
+          <select id="office-status" required>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <button type="submit">Add</button>
+        </form>
+        <div class="chart-area"><canvas id="officeChart"></canvas></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Amount (₹)</th>
+              <th>Type</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="office-list"></tbody>
+        </table>
+        <div class="totals">Total: ₹<span id="office-total">0.00</span></div>
+      </section>
+    </main>
+  </div>
+  <script>
+    // Navigation/Menu Logic
+    const menuLinks = document.querySelectorAll("aside nav ul li a");
+    const dashboardSlide = document.getElementById("dashboard-slide");
+    const trackerSections = {
+      salary: document.getElementById("salary-section"),
+      house: document.getElementById("house-section"),
+      office: document.getElementById("office-section")
+    };
+    menuLinks.forEach(link => {
+      link.addEventListener('click', function(ev) {
+        menuLinks.forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+        dashboardSlide.style.display = 'none';
+        document.getElementById("global-dashboard").style.display = 'none';
+        for (const sc in trackerSections) trackerSections[sc].classList.remove('active');
+        if (this.getAttribute('href') === "#dashboard") {
+          dashboardSlide.style.display = '';
+          document.getElementById("global-dashboard").style.display = 'block';
+        } else if (this.getAttribute('href') === "#salary") {
+          trackerSections.salary.classList.add('active');
+        } else if (this.getAttribute('href') === "#house") {
+          trackerSections.house.classList.add('active');
+        } else if (this.getAttribute('href') === "#office") {
+          trackerSections.office.classList.add('active');
+        }
+        ev.preventDefault();
+      });
+    });
+
+    function createTracker(prefix, dashId, chartId) {
+      const form = document.getElementById(`${prefix}-form`);
+      const list = document.getElementById(`${prefix}-list`);
+
+
+      
+      const totalBox = document.getElementById(`${prefix}-total`);
+
+      let entries = [];
+      let editingIndex = null;
+      const apiBase = 'http://localhost:3000/api'; // REPLACE with your backend URL
+
+      const chartCtx = document.getElementById(chartId).getContext('2d');
+      let chart;
+
+      async function fetchEntries() {
+        try {
+          const res = await fetch(`${apiBase}/${prefix}`);
+          if(!res.ok) throw new Error();
+          entries = await res.json();
+          render();
+        } catch (err) {
+          alert(`Failed to load ${prefix} data`);
+        }
+      }
+
+      async function saveEntry(entry, idx) {
+        try {
+          let res;
+          if (idx === null) {
+            res = await fetch(`${apiBase}/${prefix}`, {
+              method: 'POST',
+              body: JSON.stringify(entry),
+              headers: { 'Content-Type': 'application/json' }
+            });
+          } else {
+            res = await fetch(`${apiBase}/${prefix}/${entry.id}`, {
+              method: 'PUT',
+              body: JSON.stringify(entry),
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+          if(res.ok){
+            await fetchEntries();
+          } else {
+            alert('Failed to save entry');
+          }
+        } catch {
+          alert('Error saving entry');
+        }
+      }
+
+      async function deleteEntry(id) {
+        if(!confirm('Delete this entry?')) return;
+        try {
+          const res = await fetch(`${apiBase}/${prefix}/${id}`, { method: 'DELETE' });
+          if(res.ok) await fetchEntries();
+          else alert('Failed to delete entry');
+        } catch {
+          alert('Error deleting entry');
+        }
+      }
+
+      function updateChart() {
+        const credit = entries.filter(e => e.type==="Credit").reduce((sum,e)=>sum+Number(e.amt),0);
+        const debit = entries.filter(e => e.type==="Debit").reduce((sum,e)=>sum+Number(e.amt),0);
+        const data = {
+          labels: ["Credit","Debit"],
+          datasets: [{
+            data: [credit,debit],
+            backgroundColor:["#43a047","#e53935"]
+          }]
+        };
+        if(chart){ chart.data = data; chart.update(); }
+        else {
+          chart = new Chart(chartCtx, {
+            type:"pie",
+            data:data,
+            options:{
+              plugins:{legend:{display:true,labels:{font:{size:16}}}},
+              responsive:true,
+              maintainAspectRatio:false
+            }
+          });
+        }
+      }
+
+      function render() {
+        list.innerHTML = '';
+        let total = 0;
+        entries.forEach((e, i) => {
+          if(editingIndex===i){
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td><input type="text" id="${prefix}-edit-desc" value="${e.desc}" style="width:90px;"></td>
+              <td><input type="number" id="${prefix}-edit-amt" value="${e.amt}" style="width:70px;"></td>
+              <td>
+                <select id="${prefix}-edit-type">
+                  <option value="Credit" ${e.type==='Credit'?'selected':''}>Credit</option>
+                  <option value="Debit" ${e.type==='Debit'?'selected':''}>Debit</option>
+                </select>
+              </td>
+              <td><input type="date" id="${prefix}-edit-date" value="${e.date}"></td>
+              <td>
+                <select id="${prefix}-edit-status">
+                  <option value="Pending" ${e.status==='Pending'?'selected':''}>Pending</option>
+                  <option value="Completed" ${e.status==='Completed'?'selected':''}>Completed</option>
+                </select>
+              </td>
+              <td>
+                <button class="save-btn" data-index="${i}">Save</button>
+                <button class="cancel-btn">Cancel</button>
+              </td>
+            `;
+            list.appendChild(tr);
+          } else {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${e.desc}</td>
+              <td>₹${Number(e.amt).toFixed(2)}</td>
+              <td>${e.type}</td>
+              <td>${e.date}</td>
+              <td><span class="status-${e.status.toLowerCase()}">${e.status}</span></td>
+              <td>
+                <button class="edit-btn" data-index="${i}">Edit</button>
+                <button class="delete-btn" data-index="${i}">Delete</button>
+              </td>
+            `;
+            list.appendChild(tr);
+          }
+          total += e.type === 'Credit' ? Number(e.amt) : -Number(e.amt);
+        });
+        totalBox.textContent = total.toFixed(2);
+        document.getElementById(dashId).textContent = total.toFixed(2);
+        updateTotalDashboard();
+        updateChart();
+      }
+
+      list.addEventListener('click', async function(ev){
+        if(ev.target.classList.contains('edit-btn')){
+          editingIndex = +ev.target.getAttribute('data-index');
+          render();
+        }
+        else if(ev.target.classList.contains('save-btn')){
+          const idx = +ev.target.getAttribute('data-index');
+          const desc = document.getElementById(`${prefix}-edit-desc`).value;
+          const amt = parseFloat(document.getElementById(`${prefix}-edit-amt`).value||0);
+          const type = document.getElementById(`${prefix}-edit-type`).value;
+          const date = document.getElementById(`${prefix}-edit-date`).value;
+          const status = document.getElementById(`${prefix}-edit-status`).value;
+          if (!desc || !amt || !type || !date || amt < 0) return alert('Fill all fields correctly!');
+          const entry = {...entries[idx], desc, amt, type, date, status};
+          await saveEntry(entry, idx);
+          editingIndex=null;
+        }
+        else if(ev.target.classList.contains('cancel-btn')){
+          editingIndex=null; render();
+        }
+        else if(ev.target.classList.contains('delete-btn')){
+          const idx = +ev.target.getAttribute('data-index');
+          await deleteEntry(entries[idx].id);
+          editingIndex=null;
+        }
+      });
+
+      form.onsubmit = async function(ev) {
+        ev.preventDefault();
+        const desc = form.querySelector(`#${prefix}-desc`).value.trim();
+        const amt = parseFloat(form.querySelector(`#${prefix}-amt`).value || 0);
+        const type = form.querySelector(`#${prefix}-type`).value;
+        const date = form.querySelector(`#${prefix}-date`).value;
+        const status = form.querySelector(`#${prefix}-status`).value;
+        if (!desc || !amt || !type || !date || amt < 0) return alert('Fill all fields correctly!');
+        await saveEntry({desc, amt, type, date, status}, null);
+        form.reset();
+      };
+
+      fetchEntries();
+    }
+
+    function updateTotalDashboard() {
+      const s = Number(document.getElementById('dash-salary').textContent);
+      const h = Number(document.getElementById('dash-house').textContent);
+      const o = Number(document.getElementById('dash-office').textContent);
+      document.getElementById('dash-total').textContent = (s + h + o).toFixed(2);
+    }
+
+    // Initialize trackers
+    createTracker('salary', 'dash-salary', 'salaryChart');
+    createTracker('house', 'dash-house', 'houseChart');
+    createTracker('office', 'dash-office', 'officeChart');
+
+    dashboardSlide.style.display = ''
+    document.getElementById("global-dashboard").style.display = 'block'
+    for (const sc in trackerSections) trackerSections[sc].classList.remove('active')
+    updateTotalDashboard();
+  </script>
+</body>
+</html>
