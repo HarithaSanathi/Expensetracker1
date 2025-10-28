@@ -91,15 +91,18 @@
     .cancel-btn { background: #888;}
     .cancel-btn:hover { background: #666;}
     .totals { text-align:right; margin-top:6px;}
-    .dashboard-summary { background:#e8f0fe; max-width:840px; margin-bottom:30px; border-radius:14px; box-shadow:0 2px 7px rgba(25,118,210,0.06); padding:28px 24px;}
+    .dashboard-summary { background:#e8f0fe; max-width:840px; margin-bottom:30px; border-radius:14px; box-shadow:0 2px 7px rgba(25,118,210,0.06); padding:28px 24px; display:flex; justify-content:space-between; align-items:center;}
     .dashboard-summary h2 { color:#014378; margin-top:0;}
     .dashboard-row {display:flex;gap:36px;flex-wrap:wrap;}
     .dashboard-cell {flex:1; min-width:140px; text-align: center; margin-bottom: 10px;}
     .dashboard-total {flex:1; background:#1976d210; border-radius:12px; padding:8px 14px; text-align: center;}
     .dashboard-balance {font-size:1.4em; color:#1976d2; font-weight:bold;}
-    .status-pending { background: #fffde7; color: #e65100; font-weight:bold; border-radius:5px;}
-    .status-completed { background: #e6ffed; color: #388e3c; font-weight:bold; border-radius:5px;}
-    .chart-area {margin:16px 0 30px 0; max-width:390px;}
+    .status-pending { background: #fffde7; color: #e65100; font-weight:bold; border-radius:5px; padding:2px 6px;}
+    .status-completed { background: #e6ffed; color: #388e3c; font-weight:bold; border-radius:5px; padding:2px 6px;}
+    .chart-area {margin:16px 0 30px 0; max-width:390px; height:180px;}
+    .api-status { font-size:0.85em; padding:6px 10px; border-radius:8px; background:#e6f4ea; color:#166534; border:1px solid #c7eed0; }
+    .api-status.offline { background:#fff1f0; color:#9a1c1c; border:1px solid #ffd6d6;}
+    .toast { position: fixed; right: 18px; bottom: 18px; background: rgba(0,0,0,0.85); color: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.18); display:none; z-index:9999;}
     @media (max-width: 850px) {
       .app-container { flex-direction: column; }
       aside { width:100vw; flex-direction: row; min-height:unset; padding: 12px 0;}
@@ -110,7 +113,7 @@
         border-radius:10px;
       }
       main { padding:24px 6vw;}
-      .dashboard-summary { padding:18px 6vw;}
+      .dashboard-summary { padding:18px 6vw; flex-direction:column; gap:12px; align-items:flex-start;}
     }
     @media (max-width: 560px) {
       main { padding: 10px;}
@@ -135,47 +138,39 @@
       </nav>
     </aside>
     <main>
-      <!-- Dashboard / Home slides -->
       <section id="dashboard-slide" class="slide">
         <h1>Welcome to NoVAHAMOTECH!</h1>
         <p>Track all your finances—salary, house expenses, office expenses—all in one secure online dashboard. NoVAHAMOTECH helps you manage every credit and debit with clarity. Works seamlessly across desktop and mobile devices.</p>
-        <div style="margin: 30px 0;">
-          <h3>Our Mission</h3>
-          <p>To empower every individual and business with an easy-to-use, transparent expense tracker—so you always know where your money is going and growing.</p>
+      </section>
+
+      <section id="global-dashboard" class="dashboard-summary" style="display:block;">
+        <div>
+          <h2>Total Account Dashboard</h2>
+          <div class="dashboard-row">
+            <div class="dashboard-cell">
+              <h3>Total Balance</h3>
+              <div class="dashboard-balance">₹<span id="dash-salary">0.00</span></div>
+            </div>
+            <div class="dashboard-cell">
+              <h3>House Balance</h3>
+              <div class="dashboard-balance">₹<span id="dash-house">0.00</span></div>
+            </div>
+            <div class="dashboard-cell">
+              <h3>Office Balance</h3>
+              <div class="dashboard-balance">₹<span id="dash-office">0.00</span></div>
+            </div>
+            <div class="dashboard-total">
+              <h3>Total Balance</h3>
+              <div class="dashboard-balance" style="font-size:1.7em;">₹<span id="dash-total">0.00</span></div>
+            </div>
+          </div>
         </div>
         <div>
-          <h3>What's Inside?</h3>
-          <p>
-            Use the menu bar to access:<br>
-            - Salary Tracker: Record and analyze your earnings and deductions.<br>
-            - House Expenses: Keep a close eye on bills and home purchases.<br>
-            - Office Expenses: Manage and monitor business expenditures.<br>
-          </p>
+          <div id="apiStatus" class="api-status">Checking API...</div>
+          <div style="height:8px"></div>
         </div>
       </section>
-      <!-- Global Dashboard Summary -->
-      <section id="global-dashboard" class="dashboard-summary" style="display:block;">
-        <h2>Total Account Dashboard</h2>
-        <div class="dashboard-row">
-          <div class="dashboard-cell">
-            <h3>Total Balance</h3>
-            <div class="dashboard-balance">₹<span id="dash-salary">0.00</span></div>
-          </div>
-          <div class="dashboard-cell">
-            <h3>House Balance</h3>
-            <div class="dashboard-balance">₹<span id="dash-house">0.00</span></div>
-          </div>
-          <div class="dashboard-cell">
-            <h3>Office Balance</h3>
-            <div class="dashboard-balance">₹<span id="dash-office">0.00</span></div>
-          </div>
-          <div class="dashboard-total">
-            <h3>Total Balance</h3>
-            <div class="dashboard-balance" style="font-size:1.7em;">₹<span id="dash-total">0.00</span></div>
-          </div>
-        </div>
-      </section>
-      <!-- Salary Tracker Section -->
+
       <section id="salary-section" class="tracker-section">
         <h2>TotalExpenses</h2>
         <form id="salary-form" autocomplete="off">
@@ -209,7 +204,7 @@
         </table>
         <div class="totals">Total: ₹<span id="salary-total">0.00</span></div>
       </section>
-      <!-- House Expenses Section -->
+
       <section id="house-section" class="tracker-section">
         <h2>House Expense Tracker</h2>
         <form id="house-form" autocomplete="off">
@@ -243,7 +238,7 @@
         </table>
         <div class="totals">Total: ₹<span id="house-total">0.00</span></div>
       </section>
-      <!-- Office Expenses Section -->
+
       <section id="office-section" class="tracker-section">
         <h2>Office Expense Tracker</h2>
         <form id="office-form" autocomplete="off">
@@ -279,8 +274,302 @@
       </section>
     </main>
   </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
   <script>
-    // Navigation/Menu Logic
+    // ---------- Configuration ----------
+    // Set your backend API base here. If it is down or CORS prevents access, the app falls back to localStorage.
+    const apiBase = 'https://expensetracker-inlr.onrender.com/api'; // keep or change
+
+    // ---------- Utility: toast ----------
+    function showToast(msg, ms = 3000) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(t._timeout);
+      t._timeout = setTimeout(() => t.style.display = 'none', ms);
+    }
+
+    // ---------- API status check ----------
+    async function checkApiStatus() {
+      const el = document.getElementById('apiStatus');
+      try {
+        // Try a lightweight GET to the /health or root collection if not available then fallback to a generic fetch
+        const testUrl = `${apiBase.replace(/\/$/, '')}/ping` ; // backend can implement /ping or /health
+        const res = await fetch(testUrl, { method: 'GET', cache: 'no-cache' });
+        if (res.ok) {
+          el.classList.remove('offline');
+          el.textContent = 'API: Online';
+          return true;
+        } else {
+          // not ok, but API reachable
+          el.classList.add('offline');
+          el.textContent = 'API: Unhealthy';
+          return false;
+        }
+      } catch (err) {
+        el.classList.add('offline');
+        el.textContent = 'API: Offline (using local data)';
+        return false;
+      }
+    }
+
+    // ---------- Local storage helpers ----------
+    function storageKey(prefix) { return `expensetracker:${prefix}`; }
+    function loadLocal(prefix) {
+      try {
+        const raw = localStorage.getItem(storageKey(prefix));
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        console.error('local load error', e);
+        return [];
+      }
+    }
+    function saveLocal(prefix, entries) {
+      try {
+        localStorage.setItem(storageKey(prefix), JSON.stringify(entries));
+      } catch (e) {
+        console.error('local save error', e);
+      }
+    }
+
+    // ---------- Core tracker creator ----------
+    function createTracker(prefix, dashId, chartId) {
+      const form = document.getElementById(`${prefix}-form`);
+      const list = document.getElementById(`${prefix}-list`);
+      const totalBox = document.getElementById(`${prefix}-total`);
+      let entries = [];
+      let editingIndex = null;
+      let online = false;
+
+      const chartCtx = document.getElementById(chartId).getContext('2d');
+      let chart;
+
+      async function fetchEntries() {
+        // Try API first. If failed, fallback to localStorage.
+        try {
+          const res = await fetch(`${apiBase}/${prefix}`);
+          if (!res.ok) throw new Error('API not ok');
+          const data = await res.json();
+          // ensure ids exist
+          entries = data.map(e => ({ ...e, id: e.id ?? e._id ?? String(Date.now() + Math.random()) }));
+          saveLocal(prefix, entries); // sync local copy
+          online = true;
+        } catch (err) {
+          console.warn(`${prefix}: API fetch failed, loading local`, err);
+          entries = loadLocal(prefix);
+          online = false;
+          showToast(`${prefix} — using local data`);
+        } finally {
+          render();
+        }
+      }
+
+      async function saveEntry(entry, idx) {
+        // If online, attempt API POST/PUT. If API fails, fall back to local.
+        if (online) {
+          try {
+            let res;
+            if (idx === null) {
+              res = await fetch(`${apiBase}/${prefix}`, {
+                method: 'POST',
+                body: JSON.stringify(entry),
+                headers: { 'Content-Type': 'application/json' }
+              });
+            } else {
+              res = await fetch(`${apiBase}/${prefix}/${entry.id}`, {
+                method: 'PUT',
+                body: JSON.stringify(entry),
+                headers: { 'Content-Type': 'application/json' }
+              });
+            }
+            if (!res.ok) throw new Error('API save failed');
+            const saved = await res.json();
+            // Update local store with server-provided id if present
+            const id = saved.id ?? saved._id ?? entry.id ?? String(Date.now() + Math.random());
+            // Refresh entries from server to keep consistent
+            await fetchEntries();
+            showToast('Saved to server');
+            return;
+          } catch (err) {
+            console.warn('Save to API failed, saving local', err);
+            showToast('Could not save to server — saved locally');
+            online = false;
+          }
+        }
+
+        // Offline fallback: assign id if needed and save local
+        const id = entry.id ?? String(Date.now() + Math.floor(Math.random() * 10000));
+        const newEntry = { ...entry, id };
+        if (idx === null) {
+          entries.push(newEntry);
+        } else {
+          // find index by id
+          const i = entries.findIndex(e => e.id === entry.id);
+          if (i >= 0) entries[i] = newEntry;
+          else entries.push(newEntry);
+        }
+        saveLocal(prefix, entries);
+        render();
+      }
+
+      async function deleteEntry(id) {
+        if (!confirm('Delete this entry?')) return;
+        if (online) {
+          try {
+            const res = await fetch(`${apiBase}/${prefix}/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('API delete failed');
+            await fetchEntries();
+            showToast('Deleted on server');
+            return;
+          } catch (err) {
+            console.warn('Delete on API failed, deleting locally', err);
+            showToast('Could not delete on server — deleted locally');
+            online = false;
+          }
+        }
+        // Local delete fallback
+        entries = entries.filter(e => e.id !== id);
+        saveLocal(prefix, entries);
+        render();
+      }
+
+      function updateChart() {
+        const credit = entries.filter(e => e.type === "Credit").reduce((sum, e) => sum + Number(e.amt), 0);
+        const debit = entries.filter(e => e.type === "Debit").reduce((sum, e) => sum + Number(e.amt), 0);
+        const data = {
+          labels: ["Credit", "Debit"],
+          datasets: [{
+            data: [credit, debit],
+            backgroundColor: ["#43a047", "#e53935"]
+          }]
+        };
+        if (chart) { chart.data = data; chart.update(); }
+        else {
+          chart = new Chart(chartCtx, {
+            type: "pie",
+            data: data,
+            options: {
+              plugins: { legend: { display: true, labels: { font: { size: 16 } } } },
+              responsive: true,
+              maintainAspectRatio: false
+            }
+          });
+        }
+      }
+
+      function render() {
+        list.innerHTML = '';
+        let total = 0;
+        entries.forEach((e, i) => {
+          if (editingIndex === i) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td><input type="text" id="${prefix}-edit-desc" value="${e.desc || ''}" style="width:90px;"></td>
+              <td><input type="number" id="${prefix}-edit-amt" value="${e.amt || 0}" style="width:70px;"></td>
+              <td>
+                <select id="${prefix}-edit-type">
+                  <option value="Credit" ${e.type === 'Credit' ? 'selected' : ''}>Credit</option>
+                  <option value="Debit" ${e.type === 'Debit' ? 'selected' : ''}>Debit</option>
+                </select>
+              </td>
+              <td><input type="date" id="${prefix}-edit-date" value="${e.date || ''}"></td>
+              <td>
+                <select id="${prefix}-edit-status">
+                  <option value="Pending" ${e.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                  <option value="Completed" ${e.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                </select>
+              </td>
+              <td>
+                <button class="save-btn" data-index="${i}">Save</button>
+                <button class="cancel-btn">Cancel</button>
+              </td>
+            `;
+            list.appendChild(tr);
+          } else {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${e.desc || ''}</td>
+              <td>₹${Number(e.amt || 0).toFixed(2)}</td>
+              <td>${e.type || ''}</td>
+              <td>${e.date || ''}</td>
+              <td><span class="status-${(e.status || 'Pending').toLowerCase()}">${e.status || 'Pending'}</span></td>
+              <td>
+                <button class="edit-btn" data-index="${i}">Edit</button>
+                <button class="delete-btn" data-index="${i}">Delete</button>
+              </td>
+            `;
+            list.appendChild(tr);
+          }
+          total += (e.type === 'Credit' ? Number(e.amt || 0) : -Number(e.amt || 0));
+        });
+        totalBox.textContent = total.toFixed(2);
+        const dashEl = document.getElementById(dashId);
+        if (dashEl) dashEl.textContent = total.toFixed(2);
+        updateTotalDashboard();
+        updateChart();
+      }
+
+      list.addEventListener('click', async function (ev) {
+        if (ev.target.classList.contains('edit-btn')) {
+          editingIndex = +ev.target.getAttribute('data-index');
+          render();
+        }
+        else if (ev.target.classList.contains('save-btn')) {
+          const idx = +ev.target.getAttribute('data-index');
+          const desc = document.getElementById(`${prefix}-edit-desc`).value.trim();
+          const amt = parseFloat(document.getElementById(`${prefix}-edit-amt`).value || 0);
+          const type = document.getElementById(`${prefix}-edit-type`).value;
+          const date = document.getElementById(`${prefix}-edit-date`).value;
+          const status = document.getElementById(`${prefix}-edit-status`).value;
+          if (!desc || !type || !date || isNaN(amt) || amt < 0) return showToast('Fill all fields correctly!');
+          const entry = { ...entries[idx], desc, amt, type, date, status };
+          await saveEntry(entry, idx);
+          editingIndex = null;
+          render();
+        }
+        else if (ev.target.classList.contains('cancel-btn')) {
+          editingIndex = null; render();
+        }
+        else if (ev.target.classList.contains('delete-btn')) {
+          const idx = +ev.target.getAttribute('data-index');
+          const id = entries[idx]?.id;
+          if (id) await deleteEntry(id);
+          editingIndex = null;
+        }
+      });
+
+      form.onsubmit = async function (ev) {
+        ev.preventDefault();
+        const desc = form.querySelector(`#${prefix}-desc`).value.trim();
+        const amt = parseFloat(form.querySelector(`#${prefix}-amt`).value || 0);
+        const type = form.querySelector(`#${prefix}-type`).value;
+        const date = form.querySelector(`#${prefix}-date`).value;
+        const status = form.querySelector(`#${prefix}-status`).value;
+        if (!desc || !type || !date || isNaN(amt) || amt < 0) return showToast('Fill all fields correctly!');
+        const entry = { desc, amt, type, date, status };
+        await saveEntry(entry, null);
+        form.reset();
+      };
+
+      // Initial load
+      fetchEntries();
+
+      // Return an object if needed externally
+      return {
+        fetchEntries
+      };
+    }
+
+    function updateTotalDashboard() {
+      const s = Number(document.getElementById('dash-salary').textContent) || 0;
+      const h = Number(document.getElementById('dash-house').textContent) || 0;
+      const o = Number(document.getElementById('dash-office').textContent) || 0;
+      document.getElementById('dash-total').textContent = (s + h + o).toFixed(2);
+    }
+
+    // Navigation/Menu Logic (keeps original behaviour)
     const menuLinks = document.querySelectorAll("aside nav ul li a");
     const dashboardSlide = document.getElementById("dashboard-slide");
     const trackerSections = {
@@ -289,7 +578,7 @@
       office: document.getElementById("office-section")
     };
     menuLinks.forEach(link => {
-      link.addEventListener('click', function(ev) {
+      link.addEventListener('click', function (ev) {
         menuLinks.forEach(l => l.classList.remove('active'));
         this.classList.add('active');
         dashboardSlide.style.display = 'none';
@@ -309,202 +598,21 @@
       });
     });
 
-    function createTracker(prefix, dashId, chartId) {
-      const form = document.getElementById(`${prefix}-form`);
-      const list = document.getElementById(`${prefix}-list`);
+    // Initialize trackers after DOM ready
+    document.addEventListener('DOMContentLoaded', async () => {
+      const apiIsUp = await checkApiStatus(); // set visual status early
+      // create trackers (they will themselves try API and fallback to local)
+      createTracker('salary', 'dash-salary', 'salaryChart');
+      createTracker('house', 'dash-house', 'houseChart');
+      createTracker('office', 'dash-office', 'officeChart');
 
+      document.getElementById("dashboard-slide").style.display = '';
+      document.getElementById("global-dashboard").style.display = 'block';
+      for (const sc in trackerSections) trackerSections[sc].classList.remove('active');
+      updateTotalDashboard();
 
-      
-      const totalBox = document.getElementById(`${prefix}-total`);
-
-      let entries = [];
-      let editingIndex = null;
-      const apiBase = 'http://localhost:3000/api'; // REPLACE with your backend URL
-
-      const chartCtx = document.getElementById(chartId).getContext('2d');
-      let chart;
-
-      async function fetchEntries() {
-        try {
-          const res = await fetch(`${apiBase}/${prefix}`);
-          if(!res.ok) throw new Error();
-          entries = await res.json();
-          render();
-        } catch (err) {
-          alert(`Failed to load ${prefix} data`);
-        }
-      }
-
-      async function saveEntry(entry, idx) {
-        try {
-          let res;
-          if (idx === null) {
-            res = await fetch(`${apiBase}/${prefix}`, {
-              method: 'POST',
-              body: JSON.stringify(entry),
-              headers: { 'Content-Type': 'application/json' }
-            });
-          } else {
-            res = await fetch(`${apiBase}/${prefix}/${entry.id}`, {
-              method: 'PUT',
-              body: JSON.stringify(entry),
-              headers: { 'Content-Type': 'application/json' }
-            });
-          }
-          if(res.ok){
-            await fetchEntries();
-          } else {
-            alert('Failed to save entry');
-          }
-        } catch {
-          alert('Error saving entry');
-        }
-      }
-
-      async function deleteEntry(id) {
-        if(!confirm('Delete this entry?')) return;
-        try {
-          const res = await fetch(`${apiBase}/${prefix}/${id}`, { method: 'DELETE' });
-          if(res.ok) await fetchEntries();
-          else alert('Failed to delete entry');
-        } catch {
-          alert('Error deleting entry');
-        }
-      }
-
-      function updateChart() {
-        const credit = entries.filter(e => e.type==="Credit").reduce((sum,e)=>sum+Number(e.amt),0);
-        const debit = entries.filter(e => e.type==="Debit").reduce((sum,e)=>sum+Number(e.amt),0);
-        const data = {
-          labels: ["Credit","Debit"],
-          datasets: [{
-            data: [credit,debit],
-            backgroundColor:["#43a047","#e53935"]
-          }]
-        };
-        if(chart){ chart.data = data; chart.update(); }
-        else {
-          chart = new Chart(chartCtx, {
-            type:"pie",
-            data:data,
-            options:{
-              plugins:{legend:{display:true,labels:{font:{size:16}}}},
-              responsive:true,
-              maintainAspectRatio:false
-            }
-          });
-        }
-      }
-
-      function render() {
-        list.innerHTML = '';
-        let total = 0;
-        entries.forEach((e, i) => {
-          if(editingIndex===i){
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td><input type="text" id="${prefix}-edit-desc" value="${e.desc}" style="width:90px;"></td>
-              <td><input type="number" id="${prefix}-edit-amt" value="${e.amt}" style="width:70px;"></td>
-              <td>
-                <select id="${prefix}-edit-type">
-                  <option value="Credit" ${e.type==='Credit'?'selected':''}>Credit</option>
-                  <option value="Debit" ${e.type==='Debit'?'selected':''}>Debit</option>
-                </select>
-              </td>
-              <td><input type="date" id="${prefix}-edit-date" value="${e.date}"></td>
-              <td>
-                <select id="${prefix}-edit-status">
-                  <option value="Pending" ${e.status==='Pending'?'selected':''}>Pending</option>
-                  <option value="Completed" ${e.status==='Completed'?'selected':''}>Completed</option>
-                </select>
-              </td>
-              <td>
-                <button class="save-btn" data-index="${i}">Save</button>
-                <button class="cancel-btn">Cancel</button>
-              </td>
-            `;
-            list.appendChild(tr);
-          } else {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${e.desc}</td>
-              <td>₹${Number(e.amt).toFixed(2)}</td>
-              <td>${e.type}</td>
-              <td>${e.date}</td>
-              <td><span class="status-${e.status.toLowerCase()}">${e.status}</span></td>
-              <td>
-                <button class="edit-btn" data-index="${i}">Edit</button>
-                <button class="delete-btn" data-index="${i}">Delete</button>
-              </td>
-            `;
-            list.appendChild(tr);
-          }
-          total += e.type === 'Credit' ? Number(e.amt) : -Number(e.amt);
-        });
-        totalBox.textContent = total.toFixed(2);
-        document.getElementById(dashId).textContent = total.toFixed(2);
-        updateTotalDashboard();
-        updateChart();
-      }
-
-      list.addEventListener('click', async function(ev){
-        if(ev.target.classList.contains('edit-btn')){
-          editingIndex = +ev.target.getAttribute('data-index');
-          render();
-        }
-        else if(ev.target.classList.contains('save-btn')){
-          const idx = +ev.target.getAttribute('data-index');
-          const desc = document.getElementById(`${prefix}-edit-desc`).value;
-          const amt = parseFloat(document.getElementById(`${prefix}-edit-amt`).value||0);
-          const type = document.getElementById(`${prefix}-edit-type`).value;
-          const date = document.getElementById(`${prefix}-edit-date`).value;
-          const status = document.getElementById(`${prefix}-edit-status`).value;
-          if (!desc || !amt || !type || !date || amt < 0) return alert('Fill all fields correctly!');
-          const entry = {...entries[idx], desc, amt, type, date, status};
-          await saveEntry(entry, idx);
-          editingIndex=null;
-        }
-        else if(ev.target.classList.contains('cancel-btn')){
-          editingIndex=null; render();
-        }
-        else if(ev.target.classList.contains('delete-btn')){
-          const idx = +ev.target.getAttribute('data-index');
-          await deleteEntry(entries[idx].id);
-          editingIndex=null;
-        }
-      });
-
-      form.onsubmit = async function(ev) {
-        ev.preventDefault();
-        const desc = form.querySelector(`#${prefix}-desc`).value.trim();
-        const amt = parseFloat(form.querySelector(`#${prefix}-amt`).value || 0);
-        const type = form.querySelector(`#${prefix}-type`).value;
-        const date = form.querySelector(`#${prefix}-date`).value;
-        const status = form.querySelector(`#${prefix}-status`).value;
-        if (!desc || !amt || !type || !date || amt < 0) return alert('Fill all fields correctly!');
-        await saveEntry({desc, amt, type, date, status}, null);
-        form.reset();
-      };
-
-      fetchEntries();
-    }
-
-    function updateTotalDashboard() {
-      const s = Number(document.getElementById('dash-salary').textContent);
-      const h = Number(document.getElementById('dash-house').textContent);
-      const o = Number(document.getElementById('dash-office').textContent);
-      document.getElementById('dash-total').textContent = (s + h + o).toFixed(2);
-    }
-
-    // Initialize trackers
-    createTracker('salary', 'dash-salary', 'salaryChart');
-    createTracker('house', 'dash-house', 'houseChart');
-    createTracker('office', 'dash-office', 'officeChart');
-
-    dashboardSlide.style.display = ''
-    document.getElementById("global-dashboard").style.display = 'block'
-    for (const sc in trackerSections) trackerSections[sc].classList.remove('active')
-    updateTotalDashboard();
+      if (!apiIsUp) showToast('API unreachable — working offline (localStorage)');
+    });
   </script>
 </body>
 </html>
