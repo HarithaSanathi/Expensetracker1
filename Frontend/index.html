@@ -7,7 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #f7fafc; color: #222; min-height: 100vh; display: flex; flex-direction: column; }
-    .app-container { display: flex; min-height: 100vh;}
+    .app-container { display: flex; min-height: 100vh; }
     aside {
       background: #014378; color: white; width: 230px; min-height: 100vh;
       padding: 40px 0 0 0; box-shadow: 2px 0 12px rgba(0,0,0,0.07);
@@ -17,6 +17,20 @@
       margin-bottom: 40px; font-size: 27px; font-weight: bold;
       text-align: center; letter-spacing: 2px;
       font-family: 'Courier New', Courier, monospace;
+    }
+    /* Hamburger styles */
+    .hamburger {
+      display: none;
+      cursor: pointer;
+      padding: 12px 20px;
+      user-select: none;
+    }
+    .hamburger div {
+      width: 25px;
+      height: 3px;
+      background-color: white;
+      margin: 5px 0;
+      transition: 0.4s;
     }
     aside nav ul {
       padding: 0; margin: 0;
@@ -34,6 +48,26 @@
     aside nav ul li a.active,
     aside nav ul li a:hover {
       background: #1976d2;
+    }
+    @media (max-width: 560px) {
+      aside { width: 100vw; flex-direction: column; min-height: unset; }
+      aside nav ul {
+        display: none;
+        flex-direction: column;
+        background-color: #014378;
+        width: 100%;
+        position: absolute;
+        top: 54px;
+        left: 0;
+        border-radius: 0 0 12px 12px;
+        z-index: 1000;
+      }
+      aside nav ul.show {
+        display: flex;
+      }
+      .hamburger {
+        display: block;
+      }
     }
     main {
       padding: 38px 28px; flex: 1; max-width: 100vw; min-height: 100vh; background: #f7fafc;
@@ -105,7 +139,7 @@
     .toast { position: fixed; right: 18px; bottom: 18px; background: rgba(0,0,0,0.85); color: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.18); display:none; z-index:9999;}
     @media (max-width: 850px) {
       .app-container { flex-direction: column; }
-      aside { width:100vw; flex-direction: row; min-height:unset; padding: 12px 0;}
+      aside { width:100vw; flex-direction: column; min-height:unset; }
       aside .logo { padding:0; margin:0 0 0 22px; text-align:left;}
       aside nav ul { flex-direction: row;gap:8px;flex:1;}
       aside nav ul li a {
@@ -128,6 +162,11 @@
   <div class="app-container">
     <aside>
       <div class="logo">NoVAHAMOTECH</div>
+      <div class="hamburger" id="hamburger" aria-label="Toggle menu" role="button" tabindex="0">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
       <nav>
         <ul>
           <li><a href="#dashboard" class="active">Dashboard</a></li>
@@ -274,13 +313,11 @@
       </section>
     </main>
   </div>
-
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
   <script>
     // ---------- Configuration ----------
-    // Set your backend API base here. If it is down or CORS prevents access, the app falls back to localStorage.
-    const apiBase = 'https://expensetracker-inlr.onrender.com/api'; // keep or change
+    const apiBase = 'https://app2-fxqg.onrender.com/api';
+
 
     // ---------- Utility: toast ----------
     function showToast(msg, ms = 3000) {
@@ -295,15 +332,13 @@
     async function checkApiStatus() {
       const el = document.getElementById('apiStatus');
       try {
-        // Try a lightweight GET to the /health or root collection if not available then fallback to a generic fetch
-        const testUrl = `${apiBase.replace(/\/$/, '')}/ping` ; // backend can implement /ping or /health
+        const testUrl = `${apiBase.replace(/\/$/, '')}/ping`;
         const res = await fetch(testUrl, { method: 'GET', cache: 'no-cache' });
         if (res.ok) {
           el.classList.remove('offline');
           el.textContent = 'API: Online';
           return true;
         } else {
-          // not ok, but API reachable
           el.classList.add('offline');
           el.textContent = 'API: Unhealthy';
           return false;
@@ -347,14 +382,12 @@
       let chart;
 
       async function fetchEntries() {
-        // Try API first. If failed, fallback to localStorage.
         try {
           const res = await fetch(`${apiBase}/${prefix}`);
           if (!res.ok) throw new Error('API not ok');
           const data = await res.json();
-          // ensure ids exist
           entries = data.map(e => ({ ...e, id: e.id ?? e._id ?? String(Date.now() + Math.random()) }));
-          saveLocal(prefix, entries); // sync local copy
+          saveLocal(prefix, entries);
           online = true;
         } catch (err) {
           console.warn(`${prefix}: API fetch failed, loading local`, err);
@@ -367,7 +400,6 @@
       }
 
       async function saveEntry(entry, idx) {
-        // If online, attempt API POST/PUT. If API fails, fall back to local.
         if (online) {
           try {
             let res;
@@ -385,10 +417,6 @@
               });
             }
             if (!res.ok) throw new Error('API save failed');
-            const saved = await res.json();
-            // Update local store with server-provided id if present
-            const id = saved.id ?? saved._id ?? entry.id ?? String(Date.now() + Math.random());
-            // Refresh entries from server to keep consistent
             await fetchEntries();
             showToast('Saved to server');
             return;
@@ -399,13 +427,11 @@
           }
         }
 
-        // Offline fallback: assign id if needed and save local
         const id = entry.id ?? String(Date.now() + Math.floor(Math.random() * 10000));
         const newEntry = { ...entry, id };
         if (idx === null) {
           entries.push(newEntry);
         } else {
-          // find index by id
           const i = entries.findIndex(e => e.id === entry.id);
           if (i >= 0) entries[i] = newEntry;
           else entries.push(newEntry);
@@ -429,7 +455,6 @@
             online = false;
           }
         }
-        // Local delete fallback
         entries = entries.filter(e => e.id !== id);
         saveLocal(prefix, entries);
         render();
@@ -466,22 +491,22 @@
           if (editingIndex === i) {
             const tr = document.createElement("tr");
             tr.innerHTML = `
-              <td><input type="text" id="${prefix}-edit-desc" value="${e.desc || ''}" style="width:90px;"></td>
-              <td><input type="number" id="${prefix}-edit-amt" value="${e.amt || 0}" style="width:70px;"></td>
-              <td>
+              <td data-label="Description"><input type="text" id="${prefix}-edit-desc" value="${e.desc || ''}" style="width:90px;"></td>
+              <td data-label="Amount (₹)"><input type="number" id="${prefix}-edit-amt" value="${e.amt || 0}" style="width:70px;"></td>
+              <td data-label="Type">
                 <select id="${prefix}-edit-type">
                   <option value="Credit" ${e.type === 'Credit' ? 'selected' : ''}>Credit</option>
                   <option value="Debit" ${e.type === 'Debit' ? 'selected' : ''}>Debit</option>
                 </select>
               </td>
-              <td><input type="date" id="${prefix}-edit-date" value="${e.date || ''}"></td>
-              <td>
+              <td data-label="Date"><input type="date" id="${prefix}-edit-date" value="${e.date || ''}"></td>
+              <td data-label="Status">
                 <select id="${prefix}-edit-status">
                   <option value="Pending" ${e.status === 'Pending' ? 'selected' : ''}>Pending</option>
                   <option value="Completed" ${e.status === 'Completed' ? 'selected' : ''}>Completed</option>
                 </select>
               </td>
-              <td>
+              <td data-label="Action">
                 <button class="save-btn" data-index="${i}">Save</button>
                 <button class="cancel-btn">Cancel</button>
               </td>
@@ -490,12 +515,12 @@
           } else {
             const tr = document.createElement("tr");
             tr.innerHTML = `
-              <td>${e.desc || ''}</td>
-              <td>₹${Number(e.amt || 0).toFixed(2)}</td>
-              <td>${e.type || ''}</td>
-              <td>${e.date || ''}</td>
-              <td><span class="status-${(e.status || 'Pending').toLowerCase()}">${e.status || 'Pending'}</span></td>
-              <td>
+              <td data-label="Description">${e.desc || ''}</td>
+              <td data-label="Amount (₹)">₹${Number(e.amt || 0).toFixed(2)}</td>
+              <td data-label="Type">${e.type || ''}</td>
+              <td data-label="Date">${e.date || ''}</td>
+              <td data-label="Status"><span class="status-${(e.status || 'Pending').toLowerCase()}">${e.status || 'Pending'}</span></td>
+              <td data-label="Action">
                 <button class="edit-btn" data-index="${i}">Edit</button>
                 <button class="delete-btn" data-index="${i}">Delete</button>
               </td>
@@ -553,13 +578,9 @@
         form.reset();
       };
 
-      // Initial load
       fetchEntries();
 
-      // Return an object if needed externally
-      return {
-        fetchEntries
-      };
+      return { fetchEntries };
     }
 
     function updateTotalDashboard() {
@@ -569,7 +590,6 @@
       document.getElementById('dash-total').textContent = (s + h + o).toFixed(2);
     }
 
-    // Navigation/Menu Logic (keeps original behaviour)
     const menuLinks = document.querySelectorAll("aside nav ul li a");
     const dashboardSlide = document.getElementById("dashboard-slide");
     const trackerSections = {
@@ -598,10 +618,28 @@
       });
     });
 
+    // Hamburger toggle
+    document.addEventListener('DOMContentLoaded', () => {
+      const hamburger = document.getElementById('hamburger');
+      const navUl = document.querySelector('aside nav ul');
+      hamburger.addEventListener('click', () => {
+        navUl.classList.toggle('show');
+        hamburger.classList.toggle('active');
+      });
+      // close menu on link click (mobile UX)
+      navUl.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          if (navUl.classList.contains('show')) {
+            navUl.classList.remove('show');
+            hamburger.classList.remove('active');
+          }
+        });
+      });
+    });
+
     // Initialize trackers after DOM ready
     document.addEventListener('DOMContentLoaded', async () => {
-      const apiIsUp = await checkApiStatus(); // set visual status early
-      // create trackers (they will themselves try API and fallback to local)
+      const apiIsUp = await checkApiStatus();
       createTracker('salary', 'dash-salary', 'salaryChart');
       createTracker('house', 'dash-house', 'houseChart');
       createTracker('office', 'dash-office', 'officeChart');
